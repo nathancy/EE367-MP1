@@ -30,6 +30,25 @@ typedef struct { //
     int service4;    
 } Reqqueue;
 
+typedef struct {
+    int occ;
+    int service1;  //Service time of the request 
+    int service2;
+    int service3;
+    int service4;    
+    int service5; 
+    int service6;
+    int service7;
+    int service8;    
+} Warrior4Queue;
+
+typedef struct {
+    int busy1;
+    int busy2;
+    int depart1;
+    int depart2;
+} WarriorProcessor;
+
 Request * getrequests(void);  // Inputs request data from file 
 int warrior3(Request * list); // Returns the # blocked for Warrior 3 
 int dblwarrior(Request * list); // Returns the # blocked for Double Warrior 3
@@ -162,7 +181,7 @@ int dblwarrior(Request * list)
             reqq2.service2 = reqq2.service3;
             reqq2.service3 = reqq2.service4;
         }
-        
+
         //End of time slot
         // Remove requests from the processor that have completed service
         if (proc1.busy == 1 && proc1.depart == ctime) proc1.busy = 0;
@@ -197,7 +216,144 @@ int dblwarrior(Request * list)
 // *** Implement this function ***
 int warrior4(Request * list)
 {
-    return 0;
+    WarriorProcessor proc;
+    Request * nextreq;
+    Warrior4Queue reqq;
+
+    int ctime;
+    int blocked = 0;
+
+    nextreq = list;
+    proc.busy1 = proc.busy2 = 0;
+    reqq.occ = 0;
+
+    reqq.service1 = 0;
+    reqq.service2 = 0;
+    reqq.service3 = 0;
+    reqq.service4 = 0;
+    reqq.service5 = 0;
+    reqq.service6 = 0;
+    reqq.service7 = 0;
+    reqq.service8 = 0;
+
+    for (ctime = 0; nextreq != NULL; ctime++) {
+        // Beginning of the time slot
+        // If there is an arrival then put into request queue 
+        if (nextreq->arrival == ctime) { // Arrival
+            //If full
+            if (reqq.occ == 8) blocked++;
+            //If have a spot
+            else if (reqq.occ == 0)
+            {
+                reqq.occ++;
+                reqq.service1 = nextreq->service;
+            }
+            else if (reqq.occ == 1)
+            {
+                reqq.occ++;
+                reqq.service2 = nextreq->service;
+            }
+            else if (reqq.occ == 2)
+            {
+                reqq.occ++;
+                reqq.service3 = nextreq->service;
+            }
+            else if (reqq.occ == 3)
+            {
+                reqq.occ++;
+                reqq.service4 = nextreq->service;
+            }
+            else if (reqq.occ == 4)
+            {
+                reqq.occ++;
+                reqq.service5 = nextreq->service;
+            }
+            else if (reqq.occ == 5)
+            {
+                reqq.occ++;
+                reqq.service6 = nextreq->service;
+            }
+            else if (reqq.occ == 6)
+            {
+                reqq.occ++;
+                reqq.service7 = nextreq->service;
+            }
+            else if (reqq.occ == 7)
+            {
+                reqq.occ++;
+                reqq.service8 = nextreq->service;
+            }
+            nextreq = nextreq->next; // Point to the next arrival 
+        }
+
+        // Transfer a request from request queue to idle processor 
+        // If processor idle and stuff in queue
+        if (proc.busy1==0 && reqq.occ>0) {
+            proc.depart1 = ctime + reqq.service1 - 1;
+            proc.busy1=1;
+            reqq.occ--;
+
+            //Shift queue 
+            reqq.service1 = reqq.service2;
+            reqq.service2 = reqq.service3;
+            reqq.service3 = reqq.service4;
+            reqq.service4 = reqq.service5;
+            reqq.service5 = reqq.service6;
+            reqq.service6 = reqq.service7;
+            reqq.service7 = reqq.service8;
+        } 
+        // If processor idle and stuff in queue
+        if (proc.busy2==0 && reqq.occ>0) {
+            proc.depart2 = ctime + reqq.service1 - 1;
+            proc.busy2=1;
+            reqq.occ--;
+
+            //Shift queue 
+            reqq.service1 = reqq.service2;
+            reqq.service2 = reqq.service3;
+            reqq.service3 = reqq.service4;
+            reqq.service4 = reqq.service5;
+            reqq.service5 = reqq.service6;
+            reqq.service6 = reqq.service7;
+            reqq.service7 = reqq.service8;
+        } 
+
+        // End of the time slot 
+        // Remove requests from the processor that have completed service 
+        if (proc.busy1==1 && proc.depart1==ctime) proc.busy1=0;
+        if (proc.busy2==1 && proc.depart2==ctime) proc.busy2=0;
+
+        if (proc.busy1==0 && reqq.occ>0) {
+            proc.depart1 = ctime + reqq.service1;
+            proc.busy1=1;
+            reqq.occ--;
+
+            //Shift queue 
+            reqq.service1 = reqq.service2;
+            reqq.service2 = reqq.service3;
+            reqq.service3 = reqq.service4;
+            reqq.service4 = reqq.service5;
+            reqq.service5 = reqq.service6;
+            reqq.service6 = reqq.service7;
+            reqq.service7 = reqq.service8;
+        } 
+        // If processor idle and stuff in queue
+        if (proc.busy2==0 && reqq.occ>0) {
+            proc.depart2 = ctime + reqq.service1;
+            proc.busy2=1;
+            reqq.occ--;
+
+            //Shift queue 
+            reqq.service1 = reqq.service2;
+            reqq.service2 = reqq.service3;
+            reqq.service3 = reqq.service4;
+            reqq.service4 = reqq.service5;
+            reqq.service5 = reqq.service6;
+            reqq.service6 = reqq.service7;
+            reqq.service7 = reqq.service8;
+        } 
+    }
+    return blocked;
 } 
 
 // Returns the number of blocked request for Warrior 3
@@ -258,7 +414,7 @@ int warrior3(Request * list)
             proc.depart = ctime + reqq.service1 - 1;
             proc.busy=1;
             reqq.occ--;
-        
+
             //Shift queue 
             reqq.service1 = reqq.service2;
             reqq.service2 = reqq.service3;
