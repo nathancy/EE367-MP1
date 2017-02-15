@@ -30,28 +30,6 @@ typedef struct { //
     int service4;    
 } Reqqueue;
 
-typedef struct {
-    int busy1;
-    int busy2;
-    int depart1;
-    int depart2;
-} TwoProcessor;
-
-typedef struct {
-    int occ1;
-    int occ2;
-    int one_service1;
-    int one_service2;
-    int one_service3;
-    int one_service4;
-    int two_service1;
-    int two_service2;
-    int two_service3;
-    int two_service4;
-} TwoRequeue;
-
-
-
 Request * getrequests(void);  // Inputs request data from file 
 int warrior3(Request * list); // Returns the # blocked for Warrior 3 
 int dblwarrior(Request * list); // Returns the # blocked for Double Warrior 3
@@ -87,141 +65,133 @@ void main()
 // *** Implement this function *** 
 int dblwarrior(Request * list)
 {
-   TwoProcessor proc;
-   Request * nextreq;
-   TwoRequeue reqq;
+    Processor proc1;
+    Processor proc2;
+    Reqqueue reqq1;
+    Reqqueue reqq2;
 
-   int ctime;
-   int blocked = 0;
-   int proc_selector;
+    Request * nextreq;
 
-   nextreq = list;
-   proc.busy1 = proc.busy2 = 0;
-   reqq.occ1 = reqq.occ2 = 0;
+    int ctime;
+    int blocked = 0;
+    int selector = 0;
+    nextreq = list;
+    proc1.busy = proc2.busy = 0;
+    reqq1.occ = reqq2.occ = 0;
 
-   reqq.one_service1 = reqq.one_service2 = reqq.one_service3 = reqq.one_service4 = 0;
-   reqq.two_service1 = reqq.two_service2 = reqq.two_service3 = reqq.two_service4 = 0;
+    reqq1.service1 = reqq1.service2 = reqq1.service3 = reqq1.service4 = 0;
+    reqq2.service1 = reqq2.service2 = reqq2.service3 = reqq2.service4 = 0;
 
     for(ctime = 0; nextreq != NULL; ctime++) {
-        if(nextreq->arrival == ctime) {
-            proc_selector = ctime % 2; //0 for even, 1 for odd
-
-            //Arrival
-            //Even number, so processor 1
-            if(proc_selector == 0) {
-                if(reqq.occ1 == 4) blocked++;
-                else if (reqq.occ1 == 0)
+        //Arrival
+        if (nextreq->arrival == ctime) {
+            //Processor one
+            if(selector%2 == 0)
+            {
+                //Full
+                if (reqq1.occ == 4) blocked++;
+                //Have spot
+                else if (reqq1.occ == 0)
                 {
-                    reqq.occ1++;
-                    reqq.one_service1 = nextreq->service;
+                    reqq1.occ++;
+                    reqq1.service1 = nextreq->service;
                 }
-                else if (reqq.occ1 == 1)
-                { 
-                    reqq.occ1++;
-                    reqq.one_service2 = nextreq->service;
-                }
-                else if (reqq.occ1 == 2)
+                else if (reqq1.occ == 1)
                 {
-                    reqq.occ1++;
-                    reqq.one_service3 = nextreq->service;
+                    reqq1.occ++;
+                    reqq1.service2 = nextreq->service;
                 }
-                else if (reqq.occ1 == 3)
+                else if (reqq1.occ == 2)
                 {
-                    reqq.occ1++;
-                    reqq.one_service4 = nextreq->service;
+                    reqq1.occ++;
+                    reqq1.service3 = nextreq->service;
+                }
+                else if (reqq1.occ == 3)
+                {
+                    reqq1.occ++;
+                    reqq1.service4 = nextreq->service;
                 }
             }
-            //Odd number, so processor 2
-            else {
-                if(reqq.occ2 == 4) blocked++;
-                else if (reqq.occ2 == 0)
+            //Processor two
+            else
+            {
+                if (reqq2.occ == 4) blocked++;
+                else if (reqq2.occ == 0)
                 {
-                    reqq.occ2++;
-                    reqq.two_service1 = nextreq->service;
+                    reqq2.occ++;
+                    reqq2.service1 = nextreq->service;
                 }
-                else if (reqq.occ2 == 1)
+                else if (reqq2.occ == 1)
                 {
-                    reqq.occ2++;
-                    reqq.two_service2 = nextreq->service;
+                    reqq2.occ++;
+                    reqq2.service2 = nextreq->service;
                 }
-                else if (reqq.occ2 == 2)
+                else if (reqq2.occ == 2)
                 {
-                    reqq.occ2++;
-                    reqq.two_service3 = nextreq->service;
+                    reqq2.occ++;
+                    reqq2.service3 = nextreq->service;
                 }
-                else if (reqq.occ2 == 3)
+                else if (reqq2.occ == 3)
                 {
-                    reqq.occ2++;
-                    reqq.two_service4 = nextreq->service;
+                    reqq2.occ++;
+                    reqq2.service4 = nextreq->service;
                 }
             }
-            nextreq = nextreq->next; // Point to the next arrival 
+            nextreq = nextreq->next;
+            selector++;
         }
 
-        //Transfer request from request queue to idle processor
-        //Processor one
-        if (proc.busy1 == 0 && reqq.occ1 >0)
+        // Transfer request from request queue to idle processor
+        if (proc1.busy == 0 && reqq1.occ >0)
         {
-            proc.depart1 = ctime + reqq.one_service1 - 1;
-            proc.busy1 = 1;
-            reqq.occ1--;
+            proc1.depart = ctime + reqq1.service1 - 1;
+            proc1.busy =1;
+            reqq1.occ--;
 
-            reqq.one_service1 = reqq.one_service2;
-            reqq.one_service2 = reqq.one_service3;
-            reqq.one_service3 = reqq.one_service4;
+            reqq1.service1 = reqq1.service2;
+            reqq1.service2 = reqq1.service3;
+            reqq1.service3 = reqq1.service4;
         }
-        //Processor two
-        if (proc.busy2 == 0 && reqq.occ2 > 0)
+        if (proc2.busy == 0 && reqq2.occ > 0)
         {
-            proc.depart2 = ctime + reqq.two_service1 -1;
-            proc.busy2 = 1;
-            reqq.occ2--;
+            proc2.depart = ctime + reqq2.service1 - 1;
+            proc2.busy = 1;
+            reqq2.occ--;
 
-            reqq.two_service1 = reqq.two_service2;
-            reqq.two_service2 = reqq.two_service3;
-            reqq.two_service3 = reqq.two_service4;
+            reqq2.service1 = reqq2.service2;
+            reqq2.service2 = reqq2.service3;
+            reqq2.service3 = reqq2.service4;
         }
-
+        
         //End of time slot
-        //Remove requests from the processor that have completed service
-        //Processor one
-        if (proc.busy1 == 1 && proc.depart1 == ctime) proc.busy1 = 0;
-        //Processor two
-        if (proc.busy2 == 1 && proc.depart2 == ctime) proc.busy2 = 0;
+        // Remove requests from the processor that have completed service
+        if (proc1.busy == 1 && proc1.depart == ctime) proc1.busy = 0;
+        if (proc2.busy == 1 && proc2.depart == ctime) proc2.busy = 0;
 
-        //Transfer request from request queue to idle processor
-        //Processor one
-        if (proc.busy1 == 0 && reqq.occ1 >0)
+        // Transfer request from request queue to idle processor
+        if (proc1.busy == 0 && reqq1.occ >0)
         {
-            proc.depart1 = ctime + reqq.one_service1;
-            proc.busy1 = 1;
-            reqq.occ1--;
+            proc1.depart = ctime + reqq1.service1;
+            proc1.busy =1;
+            reqq1.occ--;
 
-            reqq.one_service1 = reqq.one_service2;
-            reqq.one_service2 = reqq.one_service3;
-            reqq.one_service3 = reqq.one_service4;
+            reqq1.service1 = reqq1.service2;
+            reqq1.service2 = reqq1.service3;
+            reqq1.service3 = reqq1.service4;
         }
-        //Processor two
-        if (proc.busy2 == 0 && reqq.occ2 > 0)
+        if (proc2.busy == 0 && reqq2.occ > 0)
         {
-            proc.depart2 = ctime + reqq.two_service1;
-            proc.busy2 = 1;
-            reqq.occ2--;
+            proc2.depart = ctime + reqq2.service1;
+            proc2.busy = 1;
+            reqq2.occ--;
 
-            reqq.two_service1 = reqq.two_service2;
-            reqq.two_service2 = reqq.two_service3;
-            reqq.two_service3 = reqq.two_service4;
+            reqq2.service1 = reqq2.service2;
+            reqq2.service2 = reqq2.service3;
+            reqq2.service3 = reqq2.service4;
         }
     }
     return blocked;
 }
-
-        
-                
-
-            
-
- 
 
 // Returns the number of blocked requests for Warrior 4 
 // *** Implement this function ***
